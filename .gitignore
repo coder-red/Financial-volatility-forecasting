@@ -1,7 +1,6 @@
 data/raw/*
 data/processed/*
 models/*
-*.duckdb
 __pycache__/
 .ipynb_checkpoints/
 .env
