@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from data_ingestion import get_data
-from config import VOL_WINDOW, HORIZON
+from config import VOL_WINDOW, VOL_TARGET_HORIZON, DATA_PROCESSED
 
 
 def add_log_returns(df, price_col="Close"):
@@ -50,21 +50,45 @@ def add_volatility_features(df, VOL_WINDOW):
 
 
 
-def add_target_volatility(df, HORIZON):
-    """
-    Create future realized volatility as prediction target.
-
-    Target = volatility over the NEXT `HORIZON` trading days.
-    """
+def add_target_volatility(df, VOL_TARGET_HORIZON):
+    " Target = future realized volatility over the next horizon(20) trading days"
     df = df.copy()
 
     df["target_volatility"] = (
         df["log_return"]
-        .rolling(HORIZON)
+        .rolling(VOL_TARGET_HORIZON)
         .std()
-        .shift(-HORIZON) # .shift(-horizon) takes the value that was originally aligned with the end of a window and slides it up so it sits at the start of that window, turning it into a “future” label for that row
+        .shift(-VOL_TARGET_HORIZON) # .shift(-horizon) takes the value that was originally aligned with the end of a window and slides it up so it sits at the start of that window, turning it into a “future” label for that row
         * np.sqrt(252)
     )
 
     return df
+
+
+def engineer_features(df, VOL_WINDOW, VOL_TARGET_HORIZON):
+    "full pipeline"
+
+    df = add_log_returns(df)
+    df = add_volatility_features(df, VOL_WINDOW)
+    df = add_target_volatility(df, VOL_TARGET_HORIZON)
+
+    # Drop rows created by rolling windows and shifts
+    df = df.dropna()
+
+    df.to_csv(DATA_PROCESSED/'processed.csv')
+
+    return df
+
+
+
+from data_ingestion import get_data 
+
+df = get_data()
+
+e = engineer_features(df, VOL_WINDOW, VOL_TARGET_HORIZON)
+
+print(e.columns)
+print(df.info())
+
+
 
