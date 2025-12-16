@@ -79,16 +79,3 @@ def engineer_features(df, VOL_WINDOW, VOL_TARGET_HORIZON):
 
     return df
 
-
-
-from data_ingestion import get_data 
-
-df = get_data()
-
-e = engineer_features(df, VOL_WINDOW, VOL_TARGET_HORIZON)
-
-print(e.columns)
-print(df.info())
-
-
-

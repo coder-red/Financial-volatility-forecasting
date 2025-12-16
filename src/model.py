@@ -5,10 +5,14 @@ from arch import arch_model
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from config import DATA_PROCESSED, TEST_SIZE
 
+
+
 def load_features():
     """Load engineered features"""
     df = pd.read_csv(DATA_PROCESSED / "processed.csv", index_col=0, parse_dates=True)
     return df
+
+
 
 
 def train_test_split(df, target_col='target_volatility', test_size=TEST_SIZE):
@@ -34,6 +38,8 @@ def train_test_split(df, target_col='target_volatility', test_size=TEST_SIZE):
 
 
 
+
+
 def train_xgboost(X_train, y_train):
     """Train XGBoost model
     XGBoost predicts volatility based on features and complex patterns"""
@@ -46,6 +52,8 @@ def train_xgboost(X_train, y_train):
     model.fit(X_train, y_train)
     
     return model
+
+
 
 
 
@@ -76,6 +84,8 @@ def forecast_garch(fitted_model, horizon=1):
     volatility_forecast = volatility_forecast / 100 * np.sqrt(252)
     
     return volatility_forecast[0]
+
+
 
 
 
