@@ -4,6 +4,7 @@ from xgboost import XGBRegressor
 from arch import arch_model
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from config import DATA_PROCESSED, TEST_SIZE
+from pathlib import Path
 
 
 
@@ -97,3 +98,17 @@ def evaluate_models(y_true, y_pred, model_name="Model"):
     r2 = r2_score(y_true, y_pred)
     
     return {"model": model_name, "rmse": rmse, "mae": mae, "r2": r2}
+
+
+
+
+
+def save_metrics(metrics: dict, filepath: Path):
+    """ Append model metrics to a CSV file """
+    df = pd.DataFrame([metrics])
+
+    if filepath.exists():
+        df_existing = pd.read_csv(filepath)
+        df = pd.concat([df_existing, df], ignore_index=True)
+
+    df.to_csv(filepath, index=False)
