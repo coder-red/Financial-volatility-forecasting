@@ -6,7 +6,7 @@ def download_data(ticker: str = TICKER, start: str = START_DATE, end: str = END_
     """Download SPY data from yfinance"""
     df = yf.download(ticker, start=start, end=end)
     
-    # flatten MultiIndex columns
+    # flatten multi index columns
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
     # force numeric dtype
@@ -39,9 +39,3 @@ def get_data():
     
     return df
 
-
-df = get_data()
-print(df.head())
-print(df.columns)
-print(f"Data shape: {df.shape}")
-print(df.dtypes)

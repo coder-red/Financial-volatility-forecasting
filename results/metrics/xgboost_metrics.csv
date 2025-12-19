@@ -1,2 +1,2 @@
-model,rmse,mae,r2
+model,rmse,mae,R_squared
 XGBoost,0.1001362776068352,0.05617601301989218,0.2347453514922313

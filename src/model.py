@@ -19,7 +19,7 @@ def load_features():
 def train_test_split(df, target_col='target_volatility', test_size=TEST_SIZE):
     """Split data chronologically for time series"""
     
-    # Define features (exclude target, # exclude log_return (already embedded in volatility target and including it risks leakage), OHLCV(beacause prices are non-stationary and unsuitable for volatility prediction))
+    # Define features (exclude target, {log_return} (already embedded in volatility target and including it risks leakage), OHLCV(beacause prices are non-stationary and unsuitable for volatility prediction))
     exclude_cols = [target_col, 'log_return', 'Open', 'High', 'Low', 'Close', 'Volume']
     feature_cols = [col for col in df.columns if col not in exclude_cols]
     
@@ -96,8 +96,8 @@ def evaluate_models(y_true, y_pred, model_name="Model"):
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
     mae = mean_absolute_error(y_true, y_pred)
     r2 = r2_score(y_true, y_pred)
-    
-    return {"model": model_name, "rmse": rmse, "mae": mae, "r2": r2}
+
+    return {"model": model_name, "rmse": rmse, "mae": mae, "R_squared": r2}
 
 
 
