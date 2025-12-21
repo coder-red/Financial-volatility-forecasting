@@ -37,10 +37,6 @@ def train_test_split(df, target_col='target_volatility', test_size=TEST_SIZE):
     return X_train, X_test, y_train, y_test
 
 
-
-
-
-
 def train_xgboost(X_train, y_train):
     """Train XGBoost model
     XGBoost predicts volatility based on features and complex patterns"""
@@ -55,6 +51,38 @@ def train_xgboost(X_train, y_train):
     return model
 
 
+
+
+def walk_forward_xgboost(X_train, X_test, y_train, y_test, retrain_frequency=20):
+    """
+    Walk forward validation retrains the model every 20 days on growing historical data 
+    while predicting one day ahead through the test period
+
+    """
+    predictions = []
+    
+    print(f"Starting walk-forward validation...")
+    print(f"Initial train size: {len(X_train)}, Test size: {len(X_test)}")
+    print(f"Retraining every {retrain_frequency} days")
+    
+    for i in range(len(X_test)): # Loops through each day (i is the day to be predicted)
+        
+        if i % retrain_frequency == 0:  #checks if the current day number is a multiple of 20 retraining only on days 0, 20, 40, 60 etc
+            print(f"Day {i}/{len(X_test)}: Retraining model (train size: {len(X_train) + i})...") #shows progress e.g on day 20 train size grows to 500+20=520 days
+            
+            # Expanding window: use all data and stop before day i
+            X_train_current = pd.concat([X_train, X_test.iloc[:i]])
+            y_train_current = pd.concat([y_train, y_test.iloc[:i]])
+            
+            model = train_xgboost(X_train_current, y_train_current)
+        
+        # Predict next day
+        X_current = X_test.iloc[[i]]
+        pred = model.predict(X_current)[0]
+        predictions.append(pred)
+    
+    print(f" Walk forward complete: {len(predictions)} predictions")
+    return np.array(predictions)
 
 
 
@@ -74,6 +102,7 @@ def train_garch(returns_series, p=1, q=1):
     fitted_model = model.fit(disp='off') # disp ='off' = Suppresses optimizer spam and cleaner logs
     
     return fitted_model
+
 
 def forecast_garch(fitted_model, horizon=1):
     """forecast volatility using fitted GARCH model"""
@@ -100,15 +129,3 @@ def evaluate_models(y_true, y_pred, model_name="Model"):
     return {"model": model_name, "rmse": rmse, "mae": mae, "R_squared": r2}
 
 
-
-
-
-def save_metrics(metrics: dict, filepath: Path):
-    """ Append model metrics to a CSV file """
-    df = pd.DataFrame([metrics])
-
-    if filepath.exists():
-        df_existing = pd.read_csv(filepath)
-        df = pd.concat([df_existing, df], ignore_index=True)
-
-    df.to_csv(filepath, index=False)

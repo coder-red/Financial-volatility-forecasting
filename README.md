@@ -72,6 +72,16 @@ Feature importance.
 
 ![Bar Chart](assets/Feature_importance.png)
 
+**Outcome from comparing standard XGBoost and walk-forward validation:** Standard training slightly outperformed walk-forward validation.
+
+| Approach | RMSE | MAE | R² |
+|----------|------|-----|-----|
+| Standard (train once) | 0.1001 | 0.0562 | 0.2347 |
+| Walk-Forward (retrain every 20 days) | 0.1006 | 0.0570 | 0.2272 |
+
+
+
+
 
 - ***Metrics used: rmse, mae, R²***
 
@@ -90,6 +100,8 @@ Volatility forecasting requires precise predictions since small errors can compo
 ## Lessons Learned and Recommendations
 
 **What I found:**
+
+- **Standard XGBoost performed better:** I compared with walk-forward validation and standard xgboost performed better. This might be because SPY volatility dynamics were stable during the test period, and retraining could have added more noise than signal.
 
 - **Historical volatility dominates prediction:** The 20-day rolling volatility (`volatility_20d`) was by far the strongest predictor. This confirms volatility persistence.  This is because instead of looking at one noisy day’s move, it looks at the average size of moves over the last 20 days. This helps the model see how turbulent the market has been recently rather than reacting to a single spike.
 
