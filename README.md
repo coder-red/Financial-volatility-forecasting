@@ -72,15 +72,15 @@ Feature importance.
 
 ![Bar Chart](assets/Feature_importance.png)
 
-**Outcome from comparing standard XGBoost and walk-forward validation:** Standard training slightly outperformed walk-forward validation.
+
+
 
 | Approach | RMSE | MAE | R² |
 |----------|------|-----|-----|
 | Standard (train once) | 0.1001 | 0.0562 | 0.2347 |
 | Walk-Forward (retrain every 20 days) | 0.1006 | 0.0570 | 0.2272 |
 
-
-
+**Outcome from comparing standard XGBoost and walk-forward validation:** Standard training slightly outperformed walk-forward validation.
 
 
 - ***Metrics used: rmse, mae, R²***
