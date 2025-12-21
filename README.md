@@ -1,4 +1,7 @@
 ![Banner](assets/vol.png)
+<p align="center">
+  <img src="assets/vol.png" alt="Project Banner" width="100%">
+</p>
 
 ![Python version](https://img.shields.io/badge/Python%20version-3.10%2B-lightgrey)
 ![GitHub repo size](https://img.shields.io/github/repo-size/coder-red/Financial-volatility-forecasting)
