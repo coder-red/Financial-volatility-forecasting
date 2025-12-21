@@ -103,7 +103,7 @@ Volatility forecasting requires precise predictions since small errors can compo
 
 
 
-**Recommendations:**
+**Recommendation:**
 - Recommendation would be to regularly re train the model on new data and use a simple check to see if the market is in a calm or crazy period, then use settings that fit that period.
 
 ## Limitations and What Can Be Improved
@@ -122,22 +122,48 @@ Volatility forecasting requires precise predictions since small errors can compo
 
 ```text
 
-├── data
-│   ├── processed
-│   └── raw
-├── notebooks
+Financial-volatility-forecasting/
+├── assets/                         # Images used in the README
+│   ├── actual_vs_pred_vol.png
+│   ├── error_comparison.png
+│   ├── Feature_importance.png
+│   └── vol.png
+├── data/                            # All data (raw, processed)
+│   ├── processed/
+│   │   └── processed.csv
+│   └── raw/
+│       └── SPY.csv
+├── notebooks/                         # Jupyter notebooks for analysis + modelling + interpretation
 │   ├── 01_eda.ipynb
 │   ├── 02_garch.ipynb
-│   └── 03_ml_vol.ipynb
-├── results
-│   ├── metrics
-│   └── plots
-├── src
+│   ├── 03_xgboost.ipynb
+│   └── 04_model_benchmarking.ipynb
+├── results/                            # Generated plots and outputs
+│   ├── figures/
+│   │   ├── eda
+│   │   │   ├── correlations.png
+│   │   │   ├── log_returns.png
+│   │   │   ├── target_volatility.png
+│   │   │   └── volatility_features.png
+│   │   ├── garch/
+│   │   │   └── GARCH_Forecast_vs_Target_Volatility.png
+│   │   └── xgboost/
+│   │       ├── Feature_importance.png
+│   │       └── Predicted_vs_True_Volatility.png
+│   ├── metrics/
+│   │   ├── garch_metrics.csv
+│   │   ├── model_comparison.csv
+│   │   └── xgboost_metrics.csv
+│   └── preds/
+│       ├── actual_vs_pred_vol.png
+│       ├── garch_preds.csv
+│       └── xgboost_preds.csv
+├── src/                                     # Python modules
 │   ├── __init__.py
-│   ├── config.py
-│   ├── data_ingestion.py
-│   ├── feature_engineering.py
-│   └── model.py
-├── .gitignore
-├── README.md
-└── requirements.txt
+│   ├── config.py                            # Paths and constants
+│   ├── data_ingestion.py                    # Data Ingestion
+│   ├── feature_engineering.py               # Feature engineering functions
+│   └── model.py                             # Training + evaluation
+├── .gitignore                               # Files/folders ignored by git
+├── README.md                                # Project overview
+└── requirements.txt                         # Required python 
