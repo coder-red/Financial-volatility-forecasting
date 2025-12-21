@@ -1,4 +1,3 @@
-![Banner](assets/vol.png)
 <p align="center">
   <img src="assets/vol.png" alt="Project Banner" width="100%">
 </p>
