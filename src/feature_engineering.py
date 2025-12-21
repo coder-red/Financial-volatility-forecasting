@@ -80,11 +80,3 @@ def engineer_features(df, VOL_WINDOW, VOL_TARGET_HORIZON):
     return df
 
 
-df = get_data()
-e = engineer_features(df, VOL_WINDOW, VOL_TARGET_HORIZON)
-print(e.head())
-print(e.columns)
-print(f"Data shape: {e.shape}")
-print(e.isna().sum().sort_values(ascending=False))
-print(e.dtypes)
-
