@@ -6,7 +6,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from config import DATA_PROCESSED, TEST_SIZE
 from pathlib import Path
 
-
+print('hi')
 
 def load_features():
     """Load engineered features"""

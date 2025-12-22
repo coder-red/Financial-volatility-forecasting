@@ -1,0 +1,16 @@
+arch
+numpy
+pandas
+scikit-learn
+matplotlib
+xgboost
+seaborn
+jupyter
+ipywidgets
+joblib
+tqdm
+yfinance
+statsmodels
+
+
+
