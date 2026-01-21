@@ -11,6 +11,9 @@ joblib
 tqdm
 yfinance
 statsmodels
+feedparser 
+transformers
 
-
-
+torch>=2.6.0
+torchvision>=0.17.1
+torchaudio>=2.6.0
