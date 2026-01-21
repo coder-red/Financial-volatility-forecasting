@@ -2,6 +2,7 @@ import feedparser
 import pandas as pd 
 from transformers import pipeline
 from datetime import datetime 
+from config import DATA_RAW
 
 # Loads the 'finbert' model 
 pipe = pipeline("text-classification", model="ProsusAI/finbert")
@@ -66,4 +67,10 @@ def fetch_daily_sentiment(ticker="SPY", keyword="market"):
 
 
 
-fetch_daily_sentiment()
+sentiment_df = fetch_daily_sentiment(
+    ticker="SPY",
+    keyword="market"
+)
+
+sentiment_df.to_csv(f"{DATA_RAW}/news_sentiment.csv", index=False)
+
