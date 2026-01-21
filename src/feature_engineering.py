@@ -65,11 +65,27 @@ def add_target_volatility(df, VOL_TARGET_HORIZON):
     return df
 
 
-def engineer_features(df, VOL_WINDOW, VOL_TARGET_HORIZON):
+def add_sentiment_features(df, sentiment_df):
+    """
+    Merge daily sentiment and create lagged sentiment feature
+    """
+    df = df.merge(sentiment_df, on="date", how="left")
+
+    # finance-safe default: no news = neutral
+    df["sentiment"] = df["sentiment"].fillna(0)
+
+    # lag to avoid leakage
+    df["sentiment_lag1"] = df["sentiment"].shift(1)
+
+    return df
+
+
+def engineer_features(df, sentiment_df, VOL_WINDOW, VOL_TARGET_HORIZON):
     "full pipeline"
 
     df = add_log_returns(df)
     df = add_volatility_features(df, VOL_WINDOW)
+    df = add_sentiment_features(df, sentiment_df)
     df = add_target_volatility(df, VOL_TARGET_HORIZON)
 
     # Drop rows created by rolling windows and shifts
