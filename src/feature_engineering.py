@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from data_ingestion import get_data
 from config import VOL_WINDOW, VOL_TARGET_HORIZON, DATA_PROCESSED
+from sklearn.preprocessing import StandardScaler
 
 
 def add_log_returns(df, price_col="Close"):
@@ -66,18 +67,25 @@ def add_target_volatility(df, VOL_TARGET_HORIZON):
 
 
 def add_sentiment_features(df, sentiment_df):
-    """
-    Merge daily sentiment and create lagged sentiment feature
-    """
-    df = df.merge(sentiment_df, on="date", how="left")
+    df = df.copy()
+    df['date'] = df.index
+    sentiment_df['date'] = pd.to_datetime(sentiment_df['date'])
+    
+    # Aggregate multiple news per day
+    daily_sentiment = sentiment_df.groupby('date')['sentiment'].mean().reset_index()
+    
+    df = df.merge(daily_sentiment, on='date', how='left')
+    
+    # Fill missing sentiment and create lag
+    df['sentiment'] = df['sentiment'].ffill().fillna(0)
+    df['sentiment_lag1'] = df['sentiment'].shift(1)
+    
+    # Scale sentiment for optimizer stability
+    scaler = StandardScaler()
+    df['sentiment_scaled'] = scaler.fit_transform(df['sentiment_lag1'].values.reshape(-1,1))
+    
+    return df.set_index('date')
 
-    # finance-safe default: no news = neutral
-    df["sentiment"] = df["sentiment"].fillna(0)
-
-    # lag to avoid leakage
-    df["sentiment_lag1"] = df["sentiment"].shift(1)
-
-    return df
 
 
 def engineer_features(df, sentiment_df, VOL_WINDOW, VOL_TARGET_HORIZON):

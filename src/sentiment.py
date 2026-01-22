@@ -67,10 +67,5 @@ def fetch_daily_sentiment(ticker="SPY", keyword="market"):
 
 
 
-sentiment_df = fetch_daily_sentiment(
-    ticker="SPY",
-    keyword="market"
-)
 
-sentiment_df.to_csv(f"{DATA_RAW}/news_sentiment.csv", index=False)
 

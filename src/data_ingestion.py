@@ -1,6 +1,7 @@
 import yfinance as yf
 import pandas as pd
 from config import DATA_RAW, TICKER, START_DATE, END_DATE
+from sentiment import fetch_daily_sentiment
 
 def download_data(ticker: str = TICKER, start: str = START_DATE, end: str = END_DATE):
     """Download SPY data from yfinance"""
@@ -39,3 +40,12 @@ def get_data():
     
     return df
 
+
+def get_sentiment_data():
+    """Fetch daily news sentiment aggregated by trading day"""
+    sentiment_df = fetch_daily_sentiment(ticker="SPY", keyword="market")
+    
+    # Keep only dates <= END_DATE
+    sentiment_df = sentiment_df[sentiment_df['date'] <= pd.to_datetime(END_DATE)]
+    sentiment_df.to_csv(DATA_RAW / "news_sentiment.csv", index=False)
+    return sentiment_df

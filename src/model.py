@@ -118,29 +118,29 @@ def forecast_garch(fitted_model, horizon=1):
 
 def train_garch_x(returns, exog):
     """
-    Train GARCH-X model with exogenous sentiment
+    returns: pd.Series
+    exog: np.ndarray (T x k)
     """
     model = arch_model(
-        returns * 100,
+        returns,
+        mean="ARX",  # sentiment enters mean equation
+        lags=0,
+        x=exog,
         vol="GARCH",
         p=1,
         q=1,
-        x=exog,
         rescale=False
     )
-    return model.fit(disp="off")
+    res = model.fit(disp="off")
+    return res
 
-
-def forecast_garch_x(model, exog_next):
+def forecast_garch_x(model_res, exog_next):
     """
-    1-step ahead volatility forecast
+    exog_next: np.ndarray (1 x k)
     """
-    forecast = model.forecast(
-        horizon=1,
-        x=exog_next,
-        reindex=False
-    )
-    return np.sqrt(forecast.variance.values[-1, 0])
+    forecast = model_res.forecast(horizon=1, x=exog_next)
+    var = forecast.variance.values[-1,0]
+    return np.sqrt(var)
 
 
 
@@ -152,5 +152,3 @@ def evaluate_models(y_true, y_pred, model_name="Model"):
     r2 = r2_score(y_true, y_pred)
 
     return {"model": model_name, "rmse": rmse, "mae": mae, "R_squared": r2}
-
-
