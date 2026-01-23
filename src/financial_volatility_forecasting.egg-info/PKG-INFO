@@ -1,0 +1,20 @@
+Metadata-Version: 2.4
+Name: financial_volatility_forecasting
+Version: 0.1.0
+Summary: Financial volatility forecasting using GARCH, GARCH-X and XGBoost
+Author: Your Name
+Requires-Python: >=3.9
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: yfinance
+Requires-Dist: matplotlib
+Requires-Dist: scikit-learn
+Requires-Dist: arch
+Requires-Dist: xgboost
+Requires-Dist: transformers
+Requires-Dist: torch
+Requires-Dist: feedparser
+Dynamic: author
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

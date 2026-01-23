@@ -45,7 +45,7 @@ def fetch_daily_sentiment(ticker="SPY", keyword="market"):
     # Converts the list of dictionaries into a structured Pandas DataFrame
     df = pd.DataFrame(rows)
 
-    # 🔑 aggregate to DAILY sentiment
+    #  aggregate to DAILY sentiment
     # Groups all news by date and calculates the average sentiment score for that day
     daily_sentiment = (
         df.groupby("date")["sentiment"]
