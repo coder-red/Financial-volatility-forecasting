@@ -4,3 +4,7 @@ __pycache__/
 .ipynb_checkpoints/
 .env
 venv/
+.venv/
+data/SPY_recent.csv
+data/news_sentiment.csv
+data/processed.csv
