@@ -1,65 +1,69 @@
 import yfinance as yf
 import pandas as pd
-from config import DATA_RAW, TICKER, START_DATE, HISTORICAL_END, RECENT_DAYS
-from sentiment import fetch_daily_sentiment
+from config import DATA_RAW, TICKER, START_DATE, END_DATE
+from sentiment import fetch_daily_sentiment_multi_source, fetch_google_trends, combine_sentiment_sources, create_daily_vol
 
-def download_historical_data(ticker: str = TICKER, start: str = START_DATE, end: str = HISTORICAL_END):
-    """Download SPY historical data (static, git-committed)"""
+
+def download_data(ticker: str = TICKER, start: str = START_DATE, end: str = END_DATE):
+    """Download SPY data and ensure it's saved in a clean machine-readable format."""
+    print(f"Downloading {ticker} from {start} to {end}...")
     df = yf.download(ticker, start=start, end=end)
     
-    # flatten multi index columns
+    # yfinance sometimes returns a 'Ticker' level in the columns (e.g., ('Close', 'SPY'))
+    # This line flattens it to just 'Close'
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
-    # force numeric dtype
-    price_cols = ["Open", "High", "Low", "Close", "Volume"]
-    df[price_cols] = df[price_cols].apply(pd.to_numeric, errors="coerce")
-
-    df.to_csv(DATA_RAW / f"{ticker}_historical.csv")
-    print("Historical data saved")
-    print(f"Shape: {df.shape}")
+    
+    # Save as CSV (Standard, readable, and machine-ready)
+    filepath = DATA_RAW / f"{ticker}.csv"
+    df.to_csv(filepath)
+    print(f"✅ Data saved to {filepath}")
+    
     return df
 
-def download_recent_data(ticker: str = TICKER, days: int = RECENT_DAYS):
-    """Download recent SPY data (live, .gitignore)"""
-    df = yf.download(ticker, period=f"{days}d", progress=False)
-    
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
-    price_cols = ["Open", "High", "Low", "Close", "Volume"]
-    df[price_cols] = df[price_cols].apply(pd.to_numeric, errors="coerce")
-    
-    recent_file = DATA_RAW / f"{ticker}_recent.csv"
-    df.to_csv(recent_file)
-    return df
 
-def get_data(live_update: bool = True):
-    """Load SPY data: historical (static) + recent (live optional)"""
+def get_data():
+    """ Load SPY data from CSV or download if not present or outdated """
+    filepath = DATA_RAW / f"{TICKER}.csv"
     
-    hist_file = DATA_RAW / f"{TICKER}_historical.csv"
-    
-    if hist_file.exists():
-        print(f"Loading historical from {hist_file}")
-        df_hist = pd.read_csv(hist_file, index_col=0, parse_dates=True)
+    if filepath.exists():
+        # parse_dates=True is CRITICAL for time-series forecasting
+        df = pd.read_csv(filepath, index_col=0, parse_dates=True)
+        
+        # Check if the data is old (e.g., if the last date is not 'yesterday')
+        last_date = df.index[-1].strftime("%Y-%m-%d")
+        if last_date < END_DATE:
+            print(f"⚠️ Data is outdated (Last date: {last_date}). Re-downloading...")
+            df = download_data()
     else:
-        print("Historical missing. Downloading...")
-        df_hist = download_historical_data()
-    
-    if live_update:
-        df_recent = download_recent_data()
-        # Smart merge (no duplicates)
-        df = pd.concat([df_hist, df_recent]).drop_duplicates().sort_index()
-        print(f"✅ Full data: {df.shape[0]} days (historical + {RECENT_DAYS}d live)")
-    else:
-        df = df_hist
-        print(f"📁 Offline mode: {df.shape[0]} days historical")
-    
+        df = download_data()
     return df
 
-def get_sentiment_data():
-    """Fetch daily news sentiment aggregated by trading day"""
-    sentiment_df = fetch_daily_sentiment(ticker="SPY", keyword="market")
-    
-    # Save live sentiment
-    sentiment_df.to_csv(DATA_RAW / "news_sentiment.csv", index=False)
-    print(f"Sentiment saved: {len(sentiment_df)} days")
-    return sentiment_df
+
+def get_sentiment_data(vol_weighted=True):
+    """
+    Fetch and combine all sentiment sources for EGARCH modeling.
+    Combines multi-source FinBERT news sentiment + Google Trends search volume.
+    Optionally applies volatility weighting.
+    Returns combined sentiment DataFrame.
+    """
+    print("\n Fetching multi-source FinBERT news sentiment...")
+    news_df = fetch_daily_sentiment_multi_source(ticker=TICKER, keyword="market")
+    news_df = news_df[news_df['date'] <= pd.to_datetime(END_DATE).date()]
+    news_df.to_csv(DATA_RAW / "news_sentiment.csv", index=False)
+    print(f" News sentiment: {len(news_df)} days")
+
+    print("\n Fetching Google Trends data...")
+    trends_df = fetch_google_trends()
+    trends_df.to_csv(DATA_RAW / "google_trends.csv", index=False)
+    print(f" Google Trends: {len(trends_df)} days")
+
+    # 🔹 Add this to ensure daily_vol.csv exists
+    if vol_weighted:
+        print("\n Creating daily volatility CSV...")
+        create_daily_vol(ticker=TICKER, window=10)  # window=10 for 10-day rolling vol
+
+    print("\n Combining sentiment sources...")
+    combined_df = combine_sentiment_sources(vol_weighted=vol_weighted)
+
+    return combined_df

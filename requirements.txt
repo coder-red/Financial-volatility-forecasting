@@ -1,27 +1,29 @@
-# Core data science
-numpy>=1.24.0,<2.0.0
+# --- Core Data & Math ---
+numpy==1.26.4
 pandas>=2.0.0
 scikit-learn>=1.3.0
 
-# Visualization
+# --- Visualization ---
 matplotlib>=3.7.0
 seaborn>=0.12.0
 
-# Modeling
+# --- Financial Modeling ---
 xgboost>=2.0.0
 statsmodels>=0.14.0
 arch>=6.0.0
 
-# Data ingestion
+# --- Data Ingestion ---
 yfinance>=0.2.0
 feedparser>=6.0.0
 requests>=2.31.0
+pytrends>=4.9.0
 
-# Utilities
-jupyter>=1.0.0
-ipywidgets>=8.0.0
-joblib>=1.3.0
-tqdm>=4.65.0
+# --- NLP (ONNX Lightweight Engine) ---
+# We pin 1.20.1 because it's stable for your Windows DLL setup
+# onnxruntime==1.20.1
+# # transformers is still needed for AutoTokenizer
+# transformers>=4.40.0
 
-# Sentiment (VADER)
-nltk>=3.8.0
+# # --- Utilities ---
+# joblib>=1.3.0
+# tqdm>=4.65.0

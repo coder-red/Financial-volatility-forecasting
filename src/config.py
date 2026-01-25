@@ -1,4 +1,6 @@
 from pathlib import Path
+from datetime import datetime, timedelta
+
 
 # Get project root (2 levels up from this file)
 BASE_DIR = Path(__file__).parent.parent
@@ -20,8 +22,8 @@ for directory in [DATA_RAW, DATA_PROCESSED, RESULTS_DIR]:
 # Model parameters
 TICKER = "SPY"  # The asset for modelling (S&P 500 ETF)
 START_DATE = "1993-01-01" # Data start date
-END_DATE = "2025-12-11" # Data end date 
-HISTORICAL_END = "2025-12-11"  # Static historical cutoff (git committed)
+END_DATE = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d") # Data end date 
+HISTORICAL_END = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")  # Static historical cutoff (git committed)
 RECENT_DAYS = 60               # Live data window (fast download)
 VOL_WINDOW = 20   # Looks at the past 20 days to compute features (Rolling window), 20 is the approximate number of trading days in a month
 TEST_SIZE = 0.2 # Proportion of data for testing

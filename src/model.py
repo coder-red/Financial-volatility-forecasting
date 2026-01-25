@@ -13,8 +13,6 @@ def load_features():
     return df
 
 
-
-
 def train_test_split(df, target_col='target_volatility', test_size=TEST_SIZE):
     """Split data chronologically for time series"""
     
@@ -35,6 +33,7 @@ def train_test_split(df, target_col='target_volatility', test_size=TEST_SIZE):
     
     return X_train, X_test, y_train, y_test
 
+######################## XGBOOST  #################################
 
 def train_xgboost(X_train, y_train):
     """Train XGBoost model
@@ -50,13 +49,10 @@ def train_xgboost(X_train, y_train):
     return model
 
 
-
-
 def walk_forward_xgboost(X_train, X_test, y_train, y_test, retrain_frequency=20):
     """
     Walk forward validation retrains the model every 20 days on growing historical data 
     while predicting one day ahead through the test period
-
     """
     predictions = []
     
@@ -84,7 +80,7 @@ def walk_forward_xgboost(X_train, X_test, y_train, y_test, retrain_frequency=20)
     return np.array(predictions)
 
 
-
+################################## GARCH ##############################
 
 def train_garch(returns_series, p=1, q=1):
     """Train GARCH(p,q) model on returns,
@@ -95,7 +91,7 @@ def train_garch(returns_series, p=1, q=1):
     returns_pct = returns_series * 100
     
     # Fit GARCH model
-    model = arch_model(returns_pct, vol='Garch', p=p, q=q)
+    model = arch_model(returns_pct, vol='Garch', p=p, q=1)
     # p = persistence / averaging of past volatility over time
     # q = reaction to the magnitude of recent shocks (returns)
     fitted_model = model.fit(disp='off') # disp ='off' = Suppresses optimizer spam and cleaner logs
@@ -116,31 +112,42 @@ def forecast_garch(fitted_model, horizon=1):
 
 
 
-def train_garch_x(returns, exog):
+############################ EGARCH #################################
+
+def train_egarch(returns, exog):
     """
-    returns: pd.Series
-    exog: np.ndarray (T x k)
+    Train EGARCH: Exponential GARCH with asymmetric leverage effects.
+    Captures asymmetry: bad news increases volatility more than good news.
+    Sentiment enters mean equation to model news impact on returns.
+    
+    returns: pd.Series of log returns
+    exog: np.ndarray (T x k) - sentiment features (scaled)
     """
     model = arch_model(
-        returns,
-        mean="ARX",  # sentiment enters mean equation
+        returns * 100,  # Convert to percentage
+        mean="ARX",  # Mean equation with exogenous sentiment
         lags=0,
         x=exog,
-        vol="GARCH",
-        p=1,
-        q=1,
+        vol="EGARCH",  # Exponential GARCH (asymmetric volatility response)
+        p=1,  # Lag order for conditional variance
+        o=1,  # Asymmetry parameter (leverage effect)
+        q=1,  # Lag order for squared innovations
         rescale=False
     )
     res = model.fit(disp="off")
     return res
 
-def forecast_garch_x(model_res, exog_next):
+
+def forecast_egarch(model_res, exog_next):
     """
-    exog_next: np.ndarray (1 x k)
+    1-step ahead volatility forecast from EGARCH with sentiment.
+    exog_next: np.ndarray (1 x k) - next period's sentiment value
     """
     forecast = model_res.forecast(horizon=1, x=exog_next)
     var = forecast.variance.values[-1,0]
-    return np.sqrt(var)
+    # Return annualized volatility
+    return np.sqrt(var) / 100 * np.sqrt(252)
+
 
 
 
@@ -150,5 +157,11 @@ def evaluate_models(y_true, y_pred, model_name="Model"):
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
     mae = mean_absolute_error(y_true, y_pred)
     r2 = r2_score(y_true, y_pred)
+
+    print(f"\n {model_name} Performance:")
+    print(f" RMSE: {rmse:.4f}")
+    print(f" MAE: {mae:.4f}")
+    print(f" R-squared: {r2:.4f}")
+
 
     return {"model": model_name, "rmse": rmse, "mae": mae, "R_squared": r2}

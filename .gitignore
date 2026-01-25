@@ -5,6 +5,11 @@ __pycache__/
 .env
 venv/
 .venv/
+.venv_old/
 data/SPY_recent.csv
 data/news_sentiment.csv
 data/processed.csv
+.onnx
+finbert.onnx
+.egg-info/
+settings.json
