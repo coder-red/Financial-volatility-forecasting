@@ -12,4 +12,3 @@ data/processed.csv
 .onnx
 finbert.onnx
 .egg-info/
-settings.json
