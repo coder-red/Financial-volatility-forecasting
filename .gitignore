@@ -12,3 +12,4 @@ data/processed.csv
 .onnx
 finbert.onnx
 .egg-info/
+.vscode/
