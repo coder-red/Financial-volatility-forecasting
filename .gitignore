@@ -9,7 +9,6 @@ venv/
 data/SPY_recent.csv
 data/news_sentiment.csv
 data/processed.csv
-.onnx
-finbert.onnx
-.egg-info/
+*.onnx
+*.egg-info/
 
