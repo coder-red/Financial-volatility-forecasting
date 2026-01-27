@@ -9,12 +9,13 @@
 
 # Key findings: 
 
-**XGBoost outperformed GARCH(1,1) across all metrics:**
+**EGARCH-X outperformed GARCH(1,1) and XGBoost in all metrics except MAE:**
 
 | Model     | RMSE  | MAE    | R²     |
 |-----------|-------|--------|--------|
-| GARCH(1,1)| 0.1078| 0.0622 | 0.1125 |
+| EGARCH-X  | 0.0978| 0.0572 | 0.2744 |
 | XGBoost   | 0.1001| 0.0562 | 0.2347 |
+| GARCH(1,1)| 0.1080| 0.0620 | 0.1158 |
 
 Even modest improvements in volatility forecasting can reduce risk mispricing and improve capital allocation.
 
@@ -35,34 +36,40 @@ Even modest improvements in volatility forecasting can reduce risk mispricing an
 
 
 ## Business context
-This model predicts future market volatility.Portfolio managers, traders and financial institutions use this to manage risk, price options, and decide how much exposure to take in financial markets. 
+This model predicts future market volatility. The model benchmarks GARCH against EGARCH-X and XGBoost. By incorporating exogenous sentiment data into EGARCH, the model is designed to catch "panic" moves that price data alone misses. Portfolio managers, traders and financial institutions use this to manage risk, price options, and decide how much exposure to take in financial markets. 
 
 ## Data source
 
-- Daily SPY price data was downloaded from Yahoo Finance using the yfinance Python library. It spans from January 1st, 1993 covering approximately 8,300 trading days.
+- Daily SPY price data is downloaded from Yahoo Finance using the yfinance Python library. It spans from January 1st, 1993 to current date.
 
+- RSS data for exogenous sentiment is downloaded from Yahoo Finance, Bloomberg, cnbc, ft, and wall street journal. 
+
+- Google Trends for current market trends
 
 ## Methods
 
-- Data cleaning,preprocessing and Feature engineering to create predictive variables
-- Exploratory data analysis
-- Model training and evaluation with XGBoost and GARCH
-- Chronological split (no random shuffling)
-- Prevented look-ahead bias by lagging all features
+- Sentiment Engineering (NLP): Extracted contextual sentiment from financial headlines using FinBERT. The model was optimized via ONNX to reduce inference latency, allowing for rapid processing of large-scale historical RSS archives.
+- Feature engineering and sentiment extraction: Integrated RSS feeds and Google Trends as exogenous variables, applied NLP based sentiment scoring to quantify market "panic"
+- Benchmarking: Evaluated three distinct models: GARCH(1,1), EGARCH-X, and XGBoost.
+- Chronological Train/Test Split: Used a fixed  split i.e 80% train / 20% test to preserve the time dependent structure of the market data and prevent random shuffling.
+- Look-ahead Bias Prevention: All exogenous features (Sentiments and trends) were lagged to ensure predictions rely strictly on information available at the time of the forecast.
+
 
 ## Tech Stack
 
-- Python (refer to requirement.txt for the packages used in this project)
-- Scikit-learn, XGBoost (machine learning & evaluation)
-- GARCH(1,1) 4
-- GARCH used as a statistical baseline
+- Python: Core logic (refer to requirement.txt for the packages used in this project)
+- FinBERT + ONNX Runtime: Leveraged FinBERT (specialized BERT for finance) exported to ONNX format for high-speed sentiment inference on RSS and news data.
+- Scikit-learn and XGBoost: machine learning & evaluation
+- Arch Library: Used for GARCH(1,1) as the baseline and EGARCH-X for modelling with exogenous inputs
+- NLP & APIs: yfinance for market data; Bloomberg, cnbc, ft, and wall street journal, Google Trends for exogenous inputs
+
 
 
 ## Quick glance at the results
 
-Line chart comparing forecasts of XGBoost vs GARCH
+Line chart comparing forecasts of XGBoost vs GARCH vs EGARCH-X
 
-![Line chart](assets/actual_vs_pred_vol.png)
+![Line chart](assets/master_vol_comparison.png)
 
 Bar Chart of error comparison of XGBoost vs GARCH
 
@@ -71,17 +78,6 @@ Bar Chart of error comparison of XGBoost vs GARCH
 Feature importance.
 
 ![Bar Chart](assets/Feature_importance.png)
-
-
-
-
-| Approach | RMSE | MAE | R² |
-|----------|------|-----|-----|
-| Standard (train once) | 0.1001 | 0.0562 | 0.2347 |
-| Walk-Forward (retrain every 20 days) | 0.1006 | 0.0570 | 0.2272 |
-
-**Outcome from comparing standard XGBoost and walk-forward validation:** Standard training slightly outperformed walk-forward validation.
-
 
 - ***Metrics used: rmse, mae, R²***
 
@@ -101,31 +97,29 @@ Volatility forecasting requires precise predictions since small errors can compo
 
 **What I found:**
 
-- **Standard XGBoost performed better:** I compared with walk-forward validation and standard xgboost performed better. This might be because SPY volatility dynamics were stable during the test period, and retraining could have added more noise than signal.
+- **EGARCH-X vs. XGBoost Performance:** While XGBoost is better at capturing non-linearities, EGARCH-X performed better due to its assymetry modelling combined with reacting to exogenous sentiment
 
-- **Historical volatility dominates prediction:** The 20-day rolling volatility (`volatility_20d`) was by far the strongest predictor. This confirms volatility persistence.  This is because instead of looking at one noisy day’s move, it looks at the average size of moves over the last 20 days. This helps the model see how turbulent the market has been recently rather than reacting to a single spike.
+- **Walk-forward validation with XGBoost performed better:** I compared with standard xgboost and walk-forward validation performed better. This might be because retraining could have added more signal. SPY volatility dynamics were stable during the test period
 
-- **ARCH-style features (abs_return, return_squared) underperformed expectations:** `return_squared` had zero importance (0.0000) in XGBoost. This is likely due to the presence of lagged volatility feature which makes it add little incremental information. The model already captures volatility dynamics through historical rolling volatility.
+- **Historical volatility dominates prediction:** The 20-day rolling mean of absolute returns (`rolling_abs_return_mean_20d`) was by far the strongest predictor. This confirms volatility persistence.  This is because instead of looking at one noisy day’s move, it looks at the average size of moves over the last 20 days. This helps the model see how turbulent the market has been recently rather than reacting to a single spike.
 
-- **Lagged returns showed limited value:** Lagged returns added very limited incremental value because the rolling volatility feature already captures past returns. Since `volatility_20d` is calculated from the last 20 days of returns, individual lagged returns become redundant.
+- **ARCH-style features (abs_return, return_squared) underperformed expectations:** `return_squared` had zero importance in XGBoost. This is likely due to the presence of lagged volatility feature which makes it add little incremental information. The model already captures volatility dynamics through historical rolling volatility.
 
-- **Feature engineering insight:** Simple rolling statistics performed better than complex ARCH-style features for XGBoost. This is likely because for machine learning models, direct volatility lags are more informative than return components (squared, absolute). 
-
-- **XGBoost improved 7% over GARCH:** Even small gains matter in volatility forecasting. The improvement came from better handling of non-linear patterns and regime changes, not from exotic features. 
+- **Lagged returns showed limited value:** Lagged returns added very limited incremental value because the rolling volatility feature already captures past returns. Since `rolling_abs_return_mean_20d` is calculated from the last 20 days of returns, individual lagged returns become redundant.
 
 
 
 **Recommendation:**
 - Recommendation would be to regularly re train the model on new data and use a simple check to see if the market is in a calm or crazy period, then use settings that fit that period.
 
-## Limitations and What Can Be Improved
-**Limitations**
-- The XGBoost model is mostly looking at what happened yesterday to predict today. If there is a major sudden market crash or spike, the model may be one day late to react because it hasn't seen the news/pattern yet.
 
-- When there is major market volatility, the model tends to play it a bit safe. It usually predicts a high spike, but the actual spike is often even higher. It is much better at catching the trend than the exact top of the chaos.
+## Limitation and What Can Be Improved
+**Limitation**
+- The model is mostly looking at what happened yesterday to predict today. If there is a major sudden market crash or spike, the model may be one day late to react because it hasn't seen the news/pattern yet.
+
 
 **What Can Be Improved**
-- Currently the model only looks at historical price and volume data(It lacks awareness). The model needs to listen to the news and that can be achieved with sentiment analysis, by using AI to financial news or Twitter/X trends.
+- Dynamic Re-training: Implement an automated pipeline to regularly re-train the model on a sliding window.
 
 ## Repository structure
 
@@ -136,7 +130,7 @@ Volatility forecasting requires precise predictions since small errors can compo
 
 Financial-volatility-forecasting/
 ├── assets/                         # Images used in the README
-│   ├── actual_vs_pred_vol.png
+│   ├── master_vol_comparison.png
 │   ├── error_comparison.png
 │   ├── Feature_importance.png
 │   └── vol.png
@@ -144,38 +138,57 @@ Financial-volatility-forecasting/
 │   ├── processed/
 │   │   └── processed.csv
 │   └── raw/
-│       └── SPY.csv
+│       ├── combined_sentiment.csv
+│       ├── daily_vol.csv
+│       ├── google_trends.csv
+│       ├── news_sentiment.csv
+│       └── SPY.csv     
 ├── notebooks/                         # Jupyter notebooks for analysis + modelling + interpretation
-│   ├── 01_eda.ipynb
-│   ├── 02_garch.ipynb
-│   ├── 03_xgboost.ipynb
-│   └── 04_model_benchmarking.ipynb
+│    ├── 01_eda.ipynb
+│    ├── 02_garch.ipynb
+│    ├── 03_xgboost.ipynb
+│    ├── 04_model_benchmarking.ipynb
+│    └── 05_egarch.ipynb
+│   
+│
 ├── results/                            # Generated plots and outputs
-│   ├── figures/
-│   │   ├── eda
-│   │   │   ├── correlations.png
-│   │   │   ├── log_returns.png
-│   │   │   ├── target_volatility.png
-│   │   │   └── volatility_features.png
-│   │   ├── garch/
-│   │   │   └── GARCH_Forecast_vs_Target_Volatility.png
-│   │   └── xgboost/
-│   │       ├── Feature_importance.png
-│   │       └── Predicted_vs_True_Volatility.png
-│   ├── metrics/
-│   │   ├── garch_metrics.csv
-│   │   ├── model_comparison.csv
-│   │   └── xgboost_metrics.csv
-│   └── preds/
-│       ├── actual_vs_pred_vol.png
-│       ├── garch_preds.csv
-│       └── xgboost_preds.csv
+│    ├── figures/
+│    │   ├── eda/
+│    │   │   ├── correlations.png
+│    │   │   ├── log_returns.png
+│    │   │   ├── sentiment_distribution.png
+│    │   │   ├── sentiment_vol_scatter.png
+│    │   │   ├── target_volatility.png
+│    │   │   └── volatility_features.png
+│    │   ├── egarch/
+│    │   │   └── EGARCH_predicted_vs_True_Volatility.png
+│    │   ├── garch/
+│    │   │   ├── GARCH_Forecast_vs_Target_Volatility.png
+│    │   │   └── GARCH_predicted_vs_True_Volatility.png
+│    │   └── xgboost/
+│    │       ├── Feature_importance.png
+│    │       └── Predicted_vs_True_Volatility.png
+│    ├── metrics/
+│    │   ├── egarch_metrics.csv
+│    │   ├── garch_metrics.csv
+│    │   ├── model_comparison.csv
+│    │   └── xgboost_metrics.csv
+│    └── preds/
+│        ├── egarch_preds.csv
+│        ├── garch_preds.csv
+│        ├── master_vol_comparison.png
+│        ├── model_comparison.html
+│        └── xgboost_preds.csv
+│
+│
 ├── src/                                     # Python modules
 │   ├── __init__.py
 │   ├── config.py                            # Paths and constants
 │   ├── data_ingestion.py                    # Data Ingestion
 │   ├── feature_engineering.py               # Feature engineering functions
-│   └── model.py                             # Training + evaluation
+│   ├── model.py                             # Training + evaluation
+│   └── sentiment.py                         
 ├── .gitignore                               # Files/folders ignored by git
 ├── README.md                                # Project overview
-└── requirements.txt                         # Required python 
+├── requirements.txt                         
+└── setup.py                               
