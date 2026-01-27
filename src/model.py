@@ -91,7 +91,7 @@ def train_garch(returns_series, p=1, q=1):
     returns_pct = returns_series * 100
     
     # Fit GARCH model
-    model = arch_model(returns_pct, vol='Garch', p=p, q=1)
+    model = arch_model(returns_pct, vol='Garch', p=p, q=q)
     # p = persistence / averaging of past volatility over time
     # q = reaction to the magnitude of recent shocks (returns)
     fitted_model = model.fit(disp='off') # disp ='off' = Suppresses optimizer spam and cleaner logs

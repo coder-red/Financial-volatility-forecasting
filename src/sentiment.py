@@ -5,7 +5,7 @@ from transformers import AutoTokenizer
 from onnxruntime import InferenceSession
 from datetime import date, datetime
 from pytrends.request import TrendReq
-from config import DATA_RAW
+from config import DATA_RAW, VOL_WINDOW
 import time
 from concurrent.futures import ThreadPoolExecutor
 
@@ -13,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 # Load FinBERT (ONNX)
 # -----------------------------
 MODEL_NAME = "ProsusAI/finbert"
-ONNX_MODEL_PATH = "../finbert.onnx"  # you must export/download this once
+ONNX_MODEL_PATH = "../finbert.onnx"  
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 session = InferenceSession(ONNX_MODEL_PATH, providers=["CPUExecutionProvider"])
@@ -166,9 +166,10 @@ def fetch_google_trends():
 # CREATE DAILY VOLATILITY
 # -----------------------------
 
-def create_daily_vol(ticker="SPY", window=10):
+def create_daily_vol(ticker="SPY", window=VOL_WINDOW):
     """
     Create daily volatility CSV from historical price data.
+    This is done to quantify recent market risk for volatility-weighted sentiment.
     Saves to DATA_RAW / 'daily_vol.csv'.
     """
     price_path = DATA_RAW / f"{ticker}.csv"
@@ -184,7 +185,7 @@ def create_daily_vol(ticker="SPY", window=10):
     prices["returns"] = prices["Close"].pct_change()
 
     # rolling volatility
-    prices["vol"] = prices["returns"].rolling(window).std()
+    prices["vol"] = prices["returns"].rolling(window).std() # Calculates the 20 day rolling standard deviation of daily returns to quantify recent market risk.
 
     daily_vol = prices[["date", "vol"]].dropna()
     daily_vol.to_csv(DATA_RAW / "daily_vol.csv", index=False)
@@ -200,10 +201,10 @@ def apply_volatility_weighting(sentiment_df, vol_df):
     sentiment_df["date"] = pd.to_datetime(sentiment_df["date"]).dt.date
     vol_df["date"] = pd.to_datetime(vol_df["date"]).dt.date
 
-    df = sentiment_df.merge(vol_df, on="date", how="left")
-    df["vol_z"] = (df["vol"] - df["vol"].mean()) / df["vol"].std()
+    df = sentiment_df.merge(vol_df, on="date", how="left") #join sentiment with volatility on date
+    df["vol_z"] = (df["vol"] - df["vol"].mean()) / df["vol"].std() # calculate z-score(How many std away from the average) of volatility
     df["sentiment_vol"] = df["sentiment"] * (1 + df["vol_z"])
-    df["sentiment_vol"] = df["sentiment_vol"].fillna(df["sentiment"])
+    df["sentiment_vol"] = df["sentiment_vol"].fillna(df["sentiment"]) # fill missing vol-weighted sentiment with original sentiment
 
     return df[["date", "sentiment_vol"]]
 
@@ -220,14 +221,15 @@ def combine_sentiment_sources(vol_weighted=True):
 
     combined = news.merge(
         trends, on="date", how="outer", suffixes=("_news", "_trends")
-    ).sort_values("date")
+    ).sort_values("date") 
 
-    combined["sentiment_news"] = combined["sentiment_news"].ffill().bfill().fillna(0)
+    # fill missing news and trends sentiment
+    combined["sentiment_news"] = combined["sentiment_news"].ffill().bfill().fillna(0) 
     combined["sentiment_trends"] = combined["sentiment_trends"].ffill().bfill().fillna(0)
 
     combined["sentiment"] = (
         0.7 * combined["sentiment_news"] + 0.3 * combined["sentiment_trends"]
-    )
+    ) # weighted average:  professional news (70%) is more reliable than trends (30%)
 
     if vol_weighted:
         vol_path = DATA_RAW / "daily_vol.csv"

@@ -1,6 +1,6 @@
 import yfinance as yf
 import pandas as pd
-from config import DATA_RAW, TICKER, START_DATE, END_DATE
+from config import DATA_RAW, TICKER, START_DATE, END_DATE, VOL_WINDOW
 from sentiment import fetch_daily_sentiment_multi_source, fetch_google_trends, combine_sentiment_sources, create_daily_vol
 
 
@@ -9,12 +9,11 @@ def download_data(ticker: str = TICKER, start: str = START_DATE, end: str = END_
     print(f"Downloading {ticker} from {start} to {end}...")
     df = yf.download(ticker, start=start, end=end)
     
-    # yfinance sometimes returns a 'Ticker' level in the columns (e.g., ('Close', 'SPY'))
-    # This line flattens it to just 'Close'
+    # This line flattens yfinance's  Ticker to just 'Close'
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
     
-    # Save as CSV (Standard, readable, and machine-ready)
+    # Save as CSV 
     filepath = DATA_RAW / f"{ticker}.csv"
     df.to_csv(filepath)
     print(f"✅ Data saved to {filepath}")
@@ -30,8 +29,8 @@ def get_data():
         # parse_dates=True is CRITICAL for time-series forecasting
         df = pd.read_csv(filepath, index_col=0, parse_dates=True)
         
-        # Check if the data is old (e.g., if the last date is not 'yesterday')
-        last_date = df.index[-1].strftime("%Y-%m-%d")
+        # Check if the data is old (e.g if the last date is not 'yesterday')
+        last_date = df.index[-1].strftime("%Y-%m-%d") # Get last date in 'YYYY-MM-DD' format
         if last_date < END_DATE:
             print(f"⚠️ Data is outdated (Last date: {last_date}). Re-downloading...")
             df = download_data()
@@ -58,10 +57,10 @@ def get_sentiment_data(vol_weighted=True):
     trends_df.to_csv(DATA_RAW / "google_trends.csv", index=False)
     print(f" Google Trends: {len(trends_df)} days")
 
-    # 🔹 Add this to ensure daily_vol.csv exists
+    # To ensure daily_vol.csv exists
     if vol_weighted:
         print("\n Creating daily volatility CSV...")
-        create_daily_vol(ticker=TICKER, window=10)  # window=10 for 10-day rolling vol
+        create_daily_vol(ticker=TICKER, window=VOL_WINDOW)  # window=20 for rolling vol
 
     print("\n Combining sentiment sources...")
     combined_df = combine_sentiment_sources(vol_weighted=vol_weighted)

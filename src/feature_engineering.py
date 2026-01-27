@@ -6,9 +6,9 @@ from sklearn.preprocessing import StandardScaler
 
 
 def add_log_returns(df, price_col="Close"):
-    "Compute log returns from price data(preferrable a it is closer to a normal distribution ) "
+    "Compute log returns from price data(preferrable as it is closer to a normal distribution ) "
     df = df.copy()
-    df["log_return"] = np.log(df[price_col] / df[price_col].shift(1))
+    df["log_return"] = np.log(df[price_col] / df[price_col].shift(1)) # compare today's price to yesterday's price
     return df
 
 
@@ -18,7 +18,8 @@ def add_volatility_features(df, VOL_WINDOW):
 
     ## Rolling historical volatility (annualized)
     """There are roughly 252 trading days in a year,
-    rolling window here is just take the last 20 days, compute then slide one step and repeat"""
+    rolling window here is just take the last 20 days, compute then slide one step and repeat.
+    While the prediction horizon is 20 days, using annualized units allows for easier model validation"""
     df[f"volatility_{VOL_WINDOW}d"] = (
         df["log_return"].rolling(VOL_WINDOW).std() * np.sqrt(252)
     )
@@ -129,7 +130,7 @@ def engineer_features(df, sentiment_df, VOL_WINDOW, VOL_TARGET_HORIZON):
     # Identify feature columns (everything except the target)
     feature_cols = [c for c in df.columns if c != 'target_volatility']
     
-    # Drop rows where any FEATURE is NaN (usually the very beginning of the data)
+    # Drop rows where any FEATURE is NaN 
     df = df.dropna(subset=feature_cols)
 
     # Save to CSV
