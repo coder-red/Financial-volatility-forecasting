@@ -11,11 +11,11 @@
 
 **EGARCH-X outperformed GARCH(1,1) and XGBoost in all metrics except MAE:**
 
-                                        | Model     | RMSE  | MAE    | R²     |
-                                        |-----------|-------|--------|--------|
-                                        | EGARCH-X  | 0.0978| 0.0572 | 0.2744 |
-                                        | XGBoost   | 0.1001| 0.0562 | 0.2347 |
-                                        | GARCH(1,1)| 0.1080| 0.0620 | 0.1158 |
+| Model     | RMSE  | MAE    | R²     |
+|-----------|-------|--------|--------|
+| EGARCH-X  | 0.0978| 0.0572 | 0.2744 |
+| XGBoost   | 0.1001| 0.0562 | 0.2347 |
+| GARCH(1,1)| 0.1080| 0.0620 | 0.1158 |
 
 Even modest improvements in volatility forecasting can reduce risk mispricing and improve capital allocation.
 
