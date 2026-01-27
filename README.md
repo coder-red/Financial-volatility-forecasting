@@ -48,20 +48,20 @@ This model predicts future market volatility. The model benchmarks GARCH against
 
 ## Methods
 
-- Sentiment Engineering (NLP): Extracted contextual sentiment from financial headlines using FinBERT. The model was optimized via ONNX to reduce inference latency, allowing for rapid processing of large-scale historical RSS archives.
-- Feature engineering and sentiment extraction: Integrated RSS feeds and Google Trends as exogenous variables, applied NLP based sentiment scoring to quantify market "panic"
-- Benchmarking: Evaluated three distinct models: GARCH(1,1), EGARCH-X, and XGBoost.
-- Chronological Train/Test Split: Used a fixed  split i.e 80% train / 20% test to preserve the time dependent structure of the market data and prevent random shuffling.
-- Look-ahead Bias Prevention: All exogenous features (Sentiments and trends) were lagged to ensure predictions rely strictly on information available at the time of the forecast.
+- **Sentiment Engineering (NLP):** Extracted contextual sentiment from financial headlines using FinBERT. The model was optimized via ONNX to reduce inference latency, allowing for rapid processing of large-scale historical RSS archives.
+- **Feature engineering and sentiment extraction:** Integrated RSS feeds and Google Trends as exogenous variables, applied NLP based sentiment scoring to quantify market "panic"
+- **Benchmarking: Evaluated three distinct models:** GARCH(1,1), EGARCH-X, and XGBoost.
+- **Chronological Train/Test Split:** Used a fixed  split i.e 80% train / 20% test to preserve the time dependent structure of the market data and prevent random shuffling.
+- **Look-ahead Bias Prevention:** All exogenous features (Sentiments and trends) were lagged to ensure predictions rely strictly on information available at the time of the forecast.
 
 
 ## Tech Stack
 
-- Python: Core logic (refer to requirement.txt for the packages used in this project)
-- FinBERT + ONNX Runtime: Leveraged FinBERT (specialized BERT for finance) exported to ONNX format for high-speed sentiment inference on RSS and news data.
-- Scikit-learn and XGBoost: machine learning & evaluation
-- Arch Library: Used for GARCH(1,1) as the baseline and EGARCH-X for modelling with exogenous inputs
-- NLP & APIs: yfinance for market data; Bloomberg, cnbc, ft, and wall street journal, Google Trends for exogenous inputs
+- **Python:** Core logic (refer to requirement.txt for the packages used in this project)
+- **FinBERT + ONNX Runtime:** Leveraged FinBERT (specialized BERT for finance) exported to ONNX format for high-speed sentiment inference on RSS and news data.
+- **Scikit-learn and XGBoost:** machine learning & evaluation
+- **Arch Library:** Used for GARCH(1,1) as the baseline and EGARCH-X for modelling with exogenous inputs
+- **NLP & APIs:** yfinance for market data; Bloomberg, cnbc, ft, and wall street journal, Google Trends for exogenous inputs
 
 
 
