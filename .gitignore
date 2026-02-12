@@ -10,8 +10,4 @@ data/SPY_recent.csv
 data/news_sentiment.csv
 data/processed.csv
 *.onnx
-*.egg-info
-*src/.egg-info/
-*.egg-info
-src/financial_volatility_forecasting.egg-info/
-src/volatility_pipeline.egg-info/
+*.egg-info/
