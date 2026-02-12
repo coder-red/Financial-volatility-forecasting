@@ -10,5 +10,9 @@ data/SPY_recent.csv
 data/news_sentiment.csv
 data/processed.csv
 *.onnx
+*.egg-info
 *.egg-info/
+
+
+
 
