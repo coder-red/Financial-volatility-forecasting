@@ -12,13 +12,8 @@ data/processed.csv
 *.onnx
 *.egg-info
 *.egg-info/
-<<<<<<< HEAD
-
-
-
-
-=======
 *.egg-info
-financial_volatility_forecasting.egg-info
+financial_volatility_forecasting.egg-info/
 volatility_pipeline.egg-info
->>>>>>> 6927d155372feb3f37066b2cb56075885f68b23e
+financial_volatility_forecasting.egg-info
+vovolatility_pipeline.egg-info/
