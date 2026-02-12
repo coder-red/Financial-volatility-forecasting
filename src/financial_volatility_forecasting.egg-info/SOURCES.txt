@@ -1,7 +1,0 @@
-README.md
-setup.py
-src/financial_volatility_forecasting.egg-info/PKG-INFO
-src/financial_volatility_forecasting.egg-info/SOURCES.txt
-src/financial_volatility_forecasting.egg-info/dependency_links.txt
-src/financial_volatility_forecasting.egg-info/requires.txt
-src/financial_volatility_forecasting.egg-info/top_level.txt
