@@ -12,4 +12,5 @@ data/processed.csv
 *.onnx
 *.egg-info/
 *.egg-info
-
+financial_volatility_forecasting.egg-info
+volatility_pipeline.egg-info
